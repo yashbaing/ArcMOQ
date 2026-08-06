@@ -1,0 +1,7 @@
+[
+  {"inputs":[{"internalType":"address","name":"buyer","type":"address"},{"internalType":"bool","name":"approved","type":"bool"}],"name":"setKybApproved","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"bytes32","name":"batchId","type":"bytes32"},{"internalType":"string","name":"productName","type":"string"},{"internalType":"string","name":"origin","type":"string"},{"internalType":"string","name":"packaging","type":"string"},{"internalType":"address","name":"supplier","type":"address"},{"internalType":"uint256","name":"totalQuantity","type":"uint256"},{"internalType":"string","name":"warehouse","type":"string"}],"name":"createBatch","outputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"string","name":"warehouse","type":"string"}],"name":"verifyBatch","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"}],"name":"mintAllAllocations","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"address","name":"buyer","type":"address"},{"internalType":"uint256","name":"quantity","type":"uint256"}],"name":"confirmRedemption","outputs":[],"stateMutability":"nonpayable","type":"function"}
+]

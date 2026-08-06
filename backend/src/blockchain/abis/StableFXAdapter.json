@@ -1,0 +1,4 @@
+[
+  {"inputs":[{"internalType":"uint256","name":"usdcAmount","type":"uint256"}],"name":"quote","outputs":[{"internalType":"uint256","name":"eurcOut","type":"uint256"},{"internalType":"uint256","name":"fee","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"usdcAmount","type":"uint256"},{"internalType":"address","name":"recipient","type":"address"}],"name":"swapToEURC","outputs":[{"internalType":"uint256","name":"eurcOut","type":"uint256"}],"stateMutability":"nonpayable","type":"function"}
+]

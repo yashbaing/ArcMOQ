@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+dist/
+build/
+cache/
+artifacts/
+typechain-types/
+coverage/
+coverage.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Hardhat
+contracts/cache/
+contracts/artifacts/
+
+# Vite
+frontend/dist/
+
+# Misc
+*.tsbuildinfo
