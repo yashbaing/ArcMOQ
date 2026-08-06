@@ -13,6 +13,7 @@
     "install:all": "npm install",
     "build": "npm run build --workspaces --if-present",
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "start": "npm run build -w shared && npm run build -w frontend && npm run serve -w backend",
     "compile": "npm run compile -w contracts",
     "deploy": "npm run deploy -w contracts",
     "seed": "npm run seed -w backend",
