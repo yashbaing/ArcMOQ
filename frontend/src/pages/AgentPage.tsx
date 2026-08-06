@@ -1,119 +1,94 @@
 import { useAppState } from '../hooks/useAppState';
+import { PageHeader, SectionCard, Badge, ActivityTimeline, LoadingState, EmptyState } from '../components/ui';
 
 const STEP_ACTIONS = [
-  { key: 'aggregate', label: '1. Aggregate Demand', mutation: 'aggregate' as const },
-  { key: 'compare', label: '2. Compare Suppliers', mutation: 'compare' as const },
-  { key: 'negotiate', label: '3. Negotiate MOQ', mutation: 'negotiate' as const },
-  { key: 'accept', label: '4. Accept Offer', mutation: 'accept' as const },
-  { key: 'policyCheck', label: '5. Policy Check', mutation: 'policyCheck' as const },
-  { key: 'settle', label: '6. Execute Settlement', mutation: 'settle' as const },
-  { key: 'verify', label: '7. Verify Shipment', mutation: 'verify' as const },
-  { key: 'mint', label: '8. Mint Receipts', mutation: 'mint' as const },
+  { key: 'aggregate', label: 'Aggregate Demand', icon: '📊', mutation: 'aggregate' as const },
+  { key: 'compare', label: 'Compare Suppliers', icon: '🔍', mutation: 'compare' as const },
+  { key: 'negotiate', label: 'Negotiate MOQ', icon: '🤝', mutation: 'negotiate' as const },
+  { key: 'accept', label: 'Accept Offer', icon: '✅', mutation: 'accept' as const },
+  { key: 'policyCheck', label: 'Policy Check', icon: '🛡️', mutation: 'policyCheck' as const },
+  { key: 'settle', label: 'Execute Settlement', icon: '⚡', mutation: 'settle' as const },
+  { key: 'verify', label: 'Verify Shipment', icon: '📦', mutation: 'verify' as const },
+  { key: 'mint', label: 'Mint Receipts', icon: '🪙', mutation: 'mint' as const },
 ];
 
 export default function AgentPage() {
   const { state, isLoading, stepMutations } = useAppState();
 
-  if (isLoading || !state) return <div className="empty-state">Loading agent activity…</div>;
-
-  const dotClass = (type: string) => {
-    if (['supplier_accepted', 'settlement_executed', 'receipt_minted', 'redemption'].includes(type)) return 'success';
-    if (type === 'policy_check') return 'warning';
-    return '';
-  };
+  if (isLoading || !state) return <LoadingState label="Loading agent activity…" />;
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>AI Agent Activity</h1>
-          <p>Structured procurement agent: research → negotiate → policy check → execute. LLM reasons; deterministic code enforces limits.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="AI Agent Activity"
+        subtitle="Structured procurement agent: research → negotiate → policy check → execute. LLM reasons; deterministic code enforces limits."
+        badge={<Badge variant="demo">Agentic Economy</Badge>}
+      />
 
       <div className="grid-2">
-        <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Agent Controls</h3>
-          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Run each step individually or use "Run Full Demo" on the Orders page.
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <SectionCard title="Agent Controls" subtitle='Run steps individually or use "Run Full Demo" on Orders'>
+          <div className="agent-steps">
             {STEP_ACTIONS.map((step) => {
               const mutation = stepMutations[step.mutation];
               return (
                 <button
                   key={step.key}
-                  className="btn-secondary"
-                  style={{ textAlign: 'left' }}
+                  className="agent-step-btn"
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
                 >
-                  {mutation.isPending ? '…' : step.label}
+                  <span>{step.icon}</span>
+                  {mutation.isPending ? 'Running…' : step.label}
                 </button>
               );
             })}
           </div>
 
           {state.currentOffer && (
-            <div className="alert alert-info" style={{ marginTop: '1rem' }}>
-              <strong>Active Offer</strong>
-              <pre className="mono" style={{ marginTop: '0.5rem', whiteSpace: 'pre-wrap', fontSize: '0.8rem' }}>
-                {JSON.stringify(state.currentOffer, null, 2)}
-              </pre>
+            <div style={{ marginTop: '1.25rem' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Active Offer</div>
+              <pre className="offer-json">{JSON.stringify(state.currentOffer, null, 2)}</pre>
             </div>
           )}
-        </div>
+        </SectionCard>
 
-        <div className="card">
-          <h3 style={{ marginBottom: '1rem' }}>Supplier Comparison</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Supplier</th>
-                <th>Price</th>
-                <th>MOQ</th>
-                <th>Delivery</th>
-                <th>EURC</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.suppliers.map((s) => (
-                <tr key={s.supplierId} style={s.supplierId === 'oliva-sur' ? { background: 'rgba(61,139,253,0.08)' } : {}}>
-                  <td>{s.supplierName}</td>
-                  <td>€{s.unitPriceEUR}</td>
-                  <td>{s.moq}</td>
-                  <td>{s.deliveryDays}d</td>
-                  <td>{s.acceptsEURC ? '✓' : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: '1rem' }}>
-        <h3 style={{ marginBottom: '1rem' }}>Activity Timeline</h3>
-        {state.activities.length === 0 ? (
-          <div className="empty-state">No agent activity yet. Run the demo to see the full procurement flow.</div>
-        ) : (
-          <div className="timeline">
-            {[...state.activities].reverse().map((event) => (
-              <div key={event.id} className="timeline-item">
-                <div className={`timeline-dot ${dotClass(event.type)}`} />
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                    <strong>{event.title}</strong>
-                    <span className="mono" style={{ color: 'var(--muted)' }}>
-                      {new Date(event.timestamp).toLocaleTimeString()}
-                    </span>
+        <SectionCard title="Supplier Comparison" subtitle="Sandbox suppliers evaluated by the research agent">
+          <div className="supplier-grid">
+            {state.suppliers.map((s) => (
+              <div
+                key={s.supplierId}
+                className={`supplier-card${s.supplierId === 'oliva-sur' ? ' supplier-card--selected' : ''}`}
+              >
+                <div className="supplier-card__head">
+                  <div>
+                    <div className="supplier-card__name">{s.supplierName}</div>
+                    {s.supplierId === 'oliva-sur' && <Badge variant="live" >Selected</Badge>}
                   </div>
-                  <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>{event.detail}</p>
+                  {s.verified && <Badge variant="demo">Verified</Badge>}
+                </div>
+                <div className="supplier-card__stats">
+                  <div className="supplier-card__stat"><label>Price</label><span>€{s.unitPriceEUR}</span></div>
+                  <div className="supplier-card__stat"><label>MOQ</label><span>{s.moq}</span></div>
+                  <div className="supplier-card__stat"><label>Delivery</label><span>{s.deliveryDays}d</span></div>
+                  <div className="supplier-card__stat"><label>EURC</label><span>{s.acceptsEURC ? '✓' : '—'}</span></div>
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </SectionCard>
       </div>
+
+      <SectionCard title="Activity Timeline" subtitle={`${state.activities.length} events recorded`} style={{ marginTop: '1.25rem' }}>
+        {state.activities.length === 0 ? (
+          <EmptyState
+            icon="🤖"
+            title="No agent activity yet"
+            detail="Run the demo to see the full procurement flow from demand aggregation to receipt redemption."
+          />
+        ) : (
+          <ActivityTimeline events={[...state.activities].reverse()} />
+        )}
+      </SectionCard>
     </div>
   );
 }

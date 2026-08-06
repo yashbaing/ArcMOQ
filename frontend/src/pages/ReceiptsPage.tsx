@@ -2,35 +2,32 @@ import { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import { buildReceipts } from '../api';
 import { ARC_TESTNET } from '@arcmoq/shared';
+import { PageHeader, Badge, SectionCard, StatCard, LoadingState } from '../components/ui';
 
 export default function ReceiptsPage() {
   const { state, isLoading, stepMutations } = useAppState();
   const [redeemQty, setRedeemQty] = useState(100);
 
-  if (isLoading || !state) return <div className="empty-state">Loading receipts…</div>;
+  if (isLoading || !state) return <LoadingState label="Loading receipts…" />;
 
   const receipts = buildReceipts(state);
   const primary = receipts[0];
 
-  const handleRedeem = () => {
-    stepMutations.redeem.mutate({ buyerName: 'Restaurant A — Al Barsha', quantity: redeemQty });
-  };
-
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>Inventory Receipts</h1>
-          <p>ERC-1155 digital warehouse receipts representing verified physical inventory claims.</p>
-        </div>
-        <span className="badge badge-demo">Warehouse Attestation: Demo Verifier</span>
-      </div>
+      <PageHeader
+        title="Inventory Receipts"
+        subtitle="ERC-1155 digital warehouse receipts representing verified physical inventory claims."
+        badge={<Badge variant="demo">Warehouse Attestation: Demo Verifier</Badge>}
+      />
 
       {!state.settlement && (
-        <div className="alert alert-warning">Complete settlement before shipment verification and receipt minting.</div>
+        <div className="alert alert-warning" style={{ marginBottom: '1.25rem' }}>
+          Complete settlement before shipment verification and receipt minting.
+        </div>
       )}
 
-      <div className="action-bar" style={{ marginBottom: '1rem' }}>
+      <div className="action-bar" style={{ marginBottom: '1.25rem' }}>
         <button className="btn-secondary" onClick={() => stepMutations.verify.mutate()} disabled={!state.settlement}>
           Verify Shipment
         </button>
@@ -40,50 +37,47 @@ export default function ReceiptsPage() {
       </div>
 
       {primary && (
-        <div className="hero-card" style={{ marginBottom: '1rem' }}>
+        <div className="hero-card" style={{ marginBottom: '1.25rem' }}>
           <div className="grid-3">
-            <div>
-              <div className="stat-label">Batch ID</div>
-              <div className="stat-value" style={{ fontSize: '1.2rem' }}>{primary.batchId}</div>
-            </div>
-            <div>
-              <div className="stat-label">Verification</div>
-              <div className="stat-value" style={{ fontSize: '1.2rem', color: primary.verificationStatus === 'verified' ? 'var(--success)' : 'var(--warning)' }}>
-                {primary.verificationStatus}
-              </div>
-            </div>
-            <div>
-              <div className="stat-label">Total units</div>
-              <div className="stat-value">{state.groupOrder.currentDemand}</div>
-            </div>
+            <StatCard label="Batch ID" value={primary.batchId} accent="gold" icon="🏷️" />
+            <StatCard
+              label="Verification"
+              value={primary.verificationStatus}
+              accent={primary.verificationStatus === 'verified' ? 'green' : undefined}
+              icon="✓"
+            />
+            <StatCard label="Total units" value={state.groupOrder.currentDemand} unit="tins" accent="blue" icon="📦" />
           </div>
         </div>
       )}
 
       <div className="grid-2">
         {receipts.map((r) => (
-          <div key={r.buyerAddress} className="card receipt-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <strong>{r.buyerName}</strong>
-              <span className={`badge ${r.shipmentStatus === 'redeemed' ? 'badge-live' : 'badge-demo'}`}>
+          <div
+            key={r.buyerAddress}
+            className={`card receipt-card${r.shipmentStatus === 'redeemed' ? ' receipt-card--redeemed' : ''}`}
+          >
+            <div className="receipt-card__head">
+              <div className="receipt-card__name">
+                <span className="buyer-avatar" style={{ marginRight: '0.5rem' }}>{r.buyerName.charAt(0)}</span>
+                {r.buyerName}
+              </div>
+              <Badge variant={r.shipmentStatus === 'redeemed' ? 'gold' : r.shipmentStatus === 'arrived' ? 'live' : 'demo'}>
                 {r.shipmentStatus}
-              </span>
+              </Badge>
             </div>
-            <table>
-              <tbody>
-                <tr><td>Allocation</td><td>{r.allocation} tins</td></tr>
-                <tr><td>Product</td><td>{r.productName}</td></tr>
-                <tr><td>Origin</td><td>{r.origin}</td></tr>
-                <tr><td>Packaging</td><td>{r.packaging}</td></tr>
-                <tr><td>RWA status</td><td>{state.receiptsMinted ? 'Minted' : 'Pending'}</td></tr>
-                {r.tokenId && <tr><td>Token ID</td><td className="mono">{r.tokenId}</td></tr>}
-              </tbody>
-            </table>
+            <div className="kv-list">
+              <div className="kv-list__row"><span>Allocation</span><span><strong>{r.allocation}</strong> tins</span></div>
+              <div className="kv-list__row"><span>Product</span><span>{r.productName}</span></div>
+              <div className="kv-list__row"><span>Origin</span><span>{r.origin}</span></div>
+              <div className="kv-list__row"><span>RWA status</span><span>{state.receiptsMinted ? 'Minted' : 'Pending'}</span></div>
+              {r.tokenId && <div className="kv-list__row"><span>Token ID</span><span className="mono">{r.tokenId}</span></div>}
+            </div>
             {r.redemptionHistory.length > 0 && (
-              <div style={{ marginTop: '0.75rem' }}>
-                <strong style={{ fontSize: '0.85rem' }}>Redemption history</strong>
+              <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>Redemption history</div>
                 {r.redemptionHistory.map((h, i) => (
-                  <div key={i} style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                  <div key={i} style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     {h.quantity} units — {new Date(h.timestamp).toLocaleString()}
                   </div>
                 ))}
@@ -94,27 +88,23 @@ export default function ReceiptsPage() {
       </div>
 
       {state.receiptsMinted && (
-        <div className="card" style={{ marginTop: '1rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Redeem Goods — Restaurant A</h3>
-          <p style={{ color: 'var(--muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>
-            Demo: burn 100 receipt units → release 100 physical tins. Warehouse confirms delivery onchain.
-          </p>
+        <SectionCard title="Redeem Goods — Restaurant A" subtitle="Burn receipt units to release physical tins" style={{ marginTop: '1.25rem' }}>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-            <div className="form-group" style={{ margin: 0, maxWidth: 200 }}>
+            <div className="form-group" style={{ margin: 0, minWidth: 160, flex: '0 0 160px' }}>
               <label>Quantity to redeem</label>
               <input type="number" min={1} max={100} value={redeemQty} onChange={(e) => setRedeemQty(Number(e.target.value))} />
             </div>
-            <button className="btn-success" onClick={handleRedeem} disabled={stepMutations.redeem.isPending}>
+            <button className="btn-success" onClick={() => stepMutations.redeem.mutate({ buyerName: 'Restaurant A — Al Barsha', quantity: redeemQty })} disabled={stepMutations.redeem.isPending}>
               {stepMutations.redeem.isPending ? 'Redeeming…' : 'Redeem & Burn Receipt'}
             </button>
           </div>
-        </div>
+        </SectionCard>
       )}
 
-      <div className="alert alert-info" style={{ marginTop: '1rem' }}>
-        Receipts are restricted to KYB-approved businesses. No speculative market. Units are burned on physical collection.
+      <div className="alert alert-info" style={{ marginTop: '1.25rem' }}>
+        Receipts are KYB-restricted. No speculative market. Units burned on physical collection.
         {state.deployments.contracts.WarehouseReceipt !== '0x0000000000000000000000000000000000000000' && (
-          <> Contract: <a href={`${ARC_TESTNET.explorerUrl}/address/${state.deployments.contracts.WarehouseReceipt}`} target="_blank" rel="noreferrer">ArcScan</a></>
+          <> · <a href={`${ARC_TESTNET.explorerUrl}/address/${state.deployments.contracts.WarehouseReceipt}`} target="_blank" rel="noreferrer">View contract</a></>
         )}
       </div>
     </div>

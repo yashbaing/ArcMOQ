@@ -1,92 +1,88 @@
 import { useAppState } from '../hooks/useAppState';
+import { PageHeader, StatCard, Badge, ProgressRail, MoqBar, LoadingState, SectionCard } from '../components/ui';
+
+const STEPS = ['Demand', 'Research', 'Negotiate', 'Policy', 'Settle', 'Verify', 'Mint', 'Redeem'];
 
 export default function OrdersPage() {
   const { state, isLoading, runDemo, stepMutations } = useAppState();
 
-  if (isLoading || !state) return <div className="empty-state">Loading group orders…</div>;
+  if (isLoading || !state) return <LoadingState label="Loading group orders…" />;
 
   const order = state.groupOrder;
   const gap = order.supplierMoq - order.currentDemand;
   const moqMet = order.currentDemand >= order.supplierMoq || order.status === 'accepted' || order.status === 'settled';
+  const negotiated = order.status === 'accepted' || order.status === 'settled' || order.status === 'verified';
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>Active Group Orders</h1>
-          <p>UAE SMEs combine demand to reach supplier MOQs and unlock wholesale pricing on Arc.</p>
-        </div>
-        <div className="action-bar">
-          <button className="btn-warning" onClick={() => runDemo.mutate()} disabled={runDemo.isPending}>
-            {runDemo.isPending ? 'Running…' : '▶ Run Full Demo'}
-          </button>
-          <button className="btn-secondary" onClick={() => stepMutations.reset.mutate()}>Reset</button>
-        </div>
-      </div>
+      <PageHeader
+        title="Active Group Orders"
+        subtitle="UAE SMEs combine demand to reach supplier MOQs and unlock wholesale pricing on Arc."
+        actions={
+          <div className="action-bar">
+            <button className="btn-demo" onClick={() => runDemo.mutate()} disabled={runDemo.isPending}>
+              {runDemo.isPending ? 'Running demo…' : '▶ Run Full Demo'}
+            </button>
+            <button className="btn-ghost" onClick={() => stepMutations.reset.mutate()}>Reset</button>
+          </div>
+        }
+      />
 
       <div className="hero-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <span className="badge badge-live">Live Group Order</span>
-            <h2 style={{ marginTop: '0.5rem', fontSize: '1.4rem' }}>{order.productName}</h2>
-            <p style={{ color: 'var(--muted)' }}>{order.origin} · {order.packaging}</p>
+        <div className="hero-card__top">
+          <div className="hero-card__product">
+            <Badge variant="live">Live Group Order</Badge>
+            <h2>{order.productName}</h2>
+            <div className="hero-card__meta">
+              <span>{order.origin}</span>
+              <span>{order.packaging}</span>
+            </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div className="stat-value" style={{ color: 'var(--accent-2)' }}>{order.estimatedSavingsPercent}%</div>
-            <div className="stat-label">Est. wholesale savings</div>
+          <div className="savings-ring">
+            <div className="stat-value">{order.estimatedSavingsPercent}%</div>
+            <div className="stat-label">Wholesale savings</div>
           </div>
         </div>
 
-        <div className="grid-3" style={{ marginTop: '1.25rem' }}>
-          <div className="card" style={{ background: 'var(--surface-2)' }}>
-            <div className="stat-label">Current demand</div>
-            <div className="stat-value">{order.currentDemand} <span style={{ fontSize: '1rem', color: 'var(--muted)' }}>tins</span></div>
-          </div>
-          <div className="card" style={{ background: 'var(--surface-2)' }}>
-            <div className="stat-label">Supplier MOQ</div>
-            <div className="stat-value">{order.supplierMoq} <span style={{ fontSize: '1rem', color: 'var(--muted)' }}>tins</span></div>
-          </div>
-          <div className="card" style={{ background: 'var(--surface-2)' }}>
-            <div className="stat-label">UAE businesses</div>
-            <div className="stat-value">{order.buyerCount}</div>
-          </div>
+        <div className="grid-3" style={{ marginTop: '1.35rem' }}>
+          <StatCard label="Current demand" value={order.currentDemand} unit="tins" accent="green" icon="📦" />
+          <StatCard label="Supplier MOQ" value={order.supplierMoq} unit="tins" accent="blue" icon="🏭" />
+          <StatCard label="UAE businesses" value={order.buyerCount} accent="gold" icon="🏢" />
         </div>
+
+        <MoqBar
+          demand={order.currentDemand}
+          originalMoq={1000}
+          negotiatedMoq={negotiated ? order.supplierMoq : undefined}
+        />
 
         {!moqMet && gap > 0 && (
           <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
-            {gap} more tins needed to meet original supplier MOQ of 1,000. AI agent can negotiate.
+            <span>⚠️</span>
+            <span>{gap} more tins needed for original MOQ of 1,000. The AI agent can negotiate this down.</span>
           </div>
         )}
 
-        {(order.status === 'accepted' || order.status === 'settled') && (
+        {negotiated && (
           <div className="moq-banner">
-            <span style={{ fontSize: '1.5rem' }}>✓</span>
+            <div className="moq-banner__icon">✓</div>
             <div>
               <strong>MOQ Renegotiated</strong>
-              <div style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
-                Agent negotiated MOQ from 1,000 → 860 tins with immediate EURC settlement.
-              </div>
+              <p>Agent secured 860 tins @ €38.10 with immediate EURC settlement and monthly recurring intent.</p>
             </div>
           </div>
         )}
 
-        <div className="progress-steps">
-          {['Demand', 'Research', 'Negotiate', 'Policy', 'Settle', 'Verify', 'Mint', 'Redeem'].map((step, i) => (
-            <span key={step} className={`step-pill ${state.demoStep > i ? 'done' : state.demoStep === i ? 'active' : ''}`}>
-              {step}
-            </span>
-          ))}
-        </div>
+        <ProgressRail steps={STEPS} current={state.demoStep} />
       </div>
 
-      <div className="card">
-        <h3 style={{ marginBottom: '1rem' }}>Buyer Mandates</h3>
+      <SectionCard title="Buyer Mandates" subtitle={`${state.mandates.length} UAE businesses in this group order`}>
         <table>
           <thead>
             <tr>
               <th>Business</th>
               <th>Quantity</th>
-              <th>Max Budget (AED)</th>
+              <th>Max Budget</th>
               <th>Deadline</th>
               <th>Auto-exec</th>
             </tr>
@@ -94,16 +90,27 @@ export default function OrdersPage() {
           <tbody>
             {state.mandates.map((m) => (
               <tr key={m.buyerAddress}>
-                <td>{m.buyerName}</td>
-                <td>{m.quantity} tins</td>
+                <td>
+                  <div className="buyer-cell">
+                    <span className="buyer-avatar">{m.buyerName.charAt(0)}</span>
+                    {m.buyerName}
+                  </div>
+                </td>
+                <td><strong>{m.quantity}</strong> tins</td>
                 <td>AED {m.maxBudgetAED.toLocaleString()}</td>
                 <td>{m.deliveryDeadline}</td>
-                <td>{m.allowAutonomousExecution ? '✓ Yes' : 'No'}</td>
+                <td>
+                  {m.allowAutonomousExecution ? (
+                    <Badge variant="live">Enabled</Badge>
+                  ) : (
+                    <span style={{ color: 'var(--muted)' }}>Manual</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </SectionCard>
     </div>
   );
 }
