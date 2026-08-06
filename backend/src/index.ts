@@ -18,7 +18,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api', apiRouter);
 
-app.listen(PORT, () => {
-  console.log(`ArcMOQ backend running on http://localhost:${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`ArcMOQ backend running on http://0.0.0.0:${PORT}`);
   console.log('Labels:', LABELS);
 });
