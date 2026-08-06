@@ -1,0 +1,14 @@
+{
+  "name": "arcmoq",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ArcMOQ — UAE SME group purchasing with AI procurement agent, Arc USDC/EURC settlement, and warehouse receipt RWAs",
+  "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "build": "npm --prefix apps/web run build",
+    "start": "npm --prefix apps/web run start",
+    "test:contracts": "cd contracts && forge test -vv",
+    "deploy:local": "bash scripts/deploy-local.sh",
+    "deploy:arc": "bash scripts/deploy-arc.sh"
+  }
+}

@@ -1,0 +1,28 @@
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
+
+# Env
+.env
+.env.local
+apps/web/.env.local
+contracts/.env
+
+# OS / IDE
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Deploy artifacts (keep folder + local example)
+deployments/*.json
+!deployments/.gitkeep
+!deployments/local.json
+
+# Next
+apps/web/.next/
+apps/web/out/
+node_modules/
+apps/web/node_modules/
