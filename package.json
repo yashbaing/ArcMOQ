@@ -11,8 +11,9 @@
   ],
   "scripts": {
     "install:all": "npm install",
-    "build": "npm run build --workspaces --if-present",
-    "vercel-build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "build": "npm run vercel-build",
+    "vercel-build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend && npm run copy:public",
+    "copy:public": "rm -rf public && mkdir -p public && cp -r frontend/dist/* public/",
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "start": "npm run build -w shared && npm run build -w frontend && npm run serve -w backend",
     "compile": "npm run compile -w contracts",
@@ -25,8 +26,12 @@
     "vercel": "^41.0.0"
   },
   "dependencies": {
+    "@arcmoq/shared": "*",
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "uuid": "^11.0.5",
+    "viem": "^2.23.5"
   },
   "engines": {
     "node": ">=18"

@@ -1,0 +1,6 @@
+contracts/cache
+contracts/artifacts
+contracts/typechain-types
+.git
+*.md
+!README.md
