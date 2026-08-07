@@ -23,7 +23,7 @@ export function getClients() {
   return { publicClient, walletClient, account };
 }
 
-export async function setupDemoOnChain(): Promise<Record<string, string>> {
+export async function setupDemoOnChain(): Promise<Record<string, string | string[]>> {
   const clients = getClients();
   const deployments = getDeployments();
   if (!clients || deployments.contracts.GroupOrder === '0x0000000000000000000000000000000000000000') {

@@ -29,6 +29,7 @@ contracts/artifacts/
 
 # Vite
 frontend/dist/
+public/
 
 # Misc
 *.tsbuildinfo

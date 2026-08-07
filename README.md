@@ -162,6 +162,25 @@ npm run demo
 - **Agentic Economy** — autonomous supplier research, negotiation, execution
 - **Cross-Border Payments** — AED UX → USDC on Arc → EURC supplier settlement
 
+## Deploy to Vercel
+
+1. Go to [vercel.com/new](https://vercel.com/new) and import **yashbaing/ArcMOQ**
+2. When asked for **Services**, select **ArcMOQ (root)** — not `backend` or `frontend` alone
+3. Confirm these settings (pre-configured in `vercel.json`):
+   - **Root Directory:** `.` (repository root)
+   - **Framework Preset:** Other
+   - **Build Command:** `npm run vercel-build`
+   - **Install Command:** `npm install`
+4. Click **Deploy**
+
+The build compiles `shared`, `backend`, and `frontend`, copies the UI into `public/`, and runs the Express API via `server.ts`. Static assets are served from `public/`; API routes live at `/api/*`.
+
+```bash
+# Optional: deploy from CLI
+npx vercel login
+npx vercel --prod
+```
+
 ## License
 
 MIT

@@ -1,28 +1,23 @@
 import express from 'express';
-import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
-import apiRouter from './routes/api';
-import { LABELS } from '@arcmoq/shared';
+import { createApp } from './app';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-const app = express();
+const app = createApp();
 const PORT = Number(process.env.PORT || 5173);
 const frontendDist = path.join(__dirname, '../../frontend/dist');
 
-app.use(cors());
-app.use(express.json());
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'arcmoq', labels: LABELS });
-});
-
-app.use('/api', apiRouter);
 app.use(express.static(frontendDist));
 
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(frontendDist, 'index.html'));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path === '/health') {
+    return next();
+  }
+  res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
+    if (err) next(err);
+  });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
