@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+  "installCommand": "npm install",
+  "framework": null,
+  "functions": {
+    "server.ts": {
+      "includeFiles": "backend/src/config/**,frontend/dist/**"
+    }
+  }
+}
