@@ -2,14 +2,14 @@ import { useAppState } from '../hooks/useAppState';
 import { PageHeader, SectionCard, Badge, ActivityTimeline, LoadingState, EmptyState } from '../components/ui';
 
 const STEP_ACTIONS = [
-  { key: 'aggregate', label: 'Aggregate Demand', icon: '📊', mutation: 'aggregate' as const },
-  { key: 'compare', label: 'Compare Suppliers', icon: '🔍', mutation: 'compare' as const },
-  { key: 'negotiate', label: 'Negotiate MOQ', icon: '🤝', mutation: 'negotiate' as const },
-  { key: 'accept', label: 'Accept Offer', icon: '✅', mutation: 'accept' as const },
-  { key: 'policyCheck', label: 'Policy Check', icon: '🛡️', mutation: 'policyCheck' as const },
-  { key: 'settle', label: 'Execute Settlement', icon: '⚡', mutation: 'settle' as const },
-  { key: 'verify', label: 'Verify Shipment', icon: '📦', mutation: 'verify' as const },
-  { key: 'mint', label: 'Mint Receipts', icon: '🪙', mutation: 'mint' as const },
+  { key: 'aggregate', label: '1. Aggregate demand', mutation: 'aggregate' as const },
+  { key: 'compare', label: '2. Compare suppliers', mutation: 'compare' as const },
+  { key: 'negotiate', label: '3. Negotiate MOQ', mutation: 'negotiate' as const },
+  { key: 'accept', label: '4. Accept offer', mutation: 'accept' as const },
+  { key: 'policyCheck', label: '5. Policy check', mutation: 'policyCheck' as const },
+  { key: 'settle', label: '6. Execute settlement', mutation: 'settle' as const },
+  { key: 'verify', label: '7. Verify shipment', mutation: 'verify' as const },
+  { key: 'mint', label: '8. Mint receipts', mutation: 'mint' as const },
 ];
 
 export default function AgentPage() {
@@ -20,13 +20,13 @@ export default function AgentPage() {
   return (
     <div>
       <PageHeader
-        title="AI Agent Activity"
-        subtitle="Structured procurement agent: research → negotiate → policy check → execute. LLM reasons; deterministic code enforces limits."
-        badge={<Badge variant="demo">Agentic Economy</Badge>}
+        title="Procurement agent"
+        subtitle="Research, negotiate, and execute within policy limits. Deterministic checks enforce budgets and mandates."
+        badge={<Badge variant="demo">Agentic workflow</Badge>}
       />
 
       <div className="grid-2">
-        <SectionCard title="Agent Controls" subtitle='Run steps individually or use "Run Full Demo" on Orders'>
+        <SectionCard title="Controls" subtitle="Run each step, or use Run full demo on Orders">
           <div className="agent-steps">
             {STEP_ACTIONS.map((step) => {
               const mutation = stepMutations[step.mutation];
@@ -37,7 +37,6 @@ export default function AgentPage() {
                   onClick={() => mutation.mutate()}
                   disabled={mutation.isPending}
                 >
-                  <span>{step.icon}</span>
                   {mutation.isPending ? 'Running…' : step.label}
                 </button>
               );
@@ -46,13 +45,15 @@ export default function AgentPage() {
 
           {state.currentOffer && (
             <div style={{ marginTop: '1.25rem' }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Active Offer</div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Active offer
+              </div>
               <pre className="offer-json">{JSON.stringify(state.currentOffer, null, 2)}</pre>
             </div>
           )}
         </SectionCard>
 
-        <SectionCard title="Supplier Comparison" subtitle="Sandbox suppliers evaluated by the research agent">
+        <SectionCard title="Supplier comparison" subtitle="Sandbox quotes ranked by the research agent">
           <div className="supplier-grid">
             {state.suppliers.map((s) => (
               <div
@@ -62,7 +63,11 @@ export default function AgentPage() {
                 <div className="supplier-card__head">
                   <div>
                     <div className="supplier-card__name">{s.supplierName}</div>
-                    {s.supplierId === 'oliva-sur' && <Badge variant="live" >Selected</Badge>}
+                    {s.supplierId === 'oliva-sur' && (
+                      <div style={{ marginTop: '0.35rem' }}>
+                        <Badge variant="live">Selected</Badge>
+                      </div>
+                    )}
                   </div>
                   {s.verified && <Badge variant="demo">Verified</Badge>}
                 </div>
@@ -70,7 +75,7 @@ export default function AgentPage() {
                   <div className="supplier-card__stat"><label>Price</label><span>€{s.unitPriceEUR}</span></div>
                   <div className="supplier-card__stat"><label>MOQ</label><span>{s.moq}</span></div>
                   <div className="supplier-card__stat"><label>Delivery</label><span>{s.deliveryDays}d</span></div>
-                  <div className="supplier-card__stat"><label>EURC</label><span>{s.acceptsEURC ? '✓' : '—'}</span></div>
+                  <div className="supplier-card__stat"><label>EURC</label><span>{s.acceptsEURC ? 'Yes' : 'No'}</span></div>
                 </div>
               </div>
             ))}
@@ -78,12 +83,11 @@ export default function AgentPage() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Activity Timeline" subtitle={`${state.activities.length} events recorded`} style={{ marginTop: '1.25rem' }}>
+      <SectionCard title="Activity timeline" subtitle={`${state.activities.length} events`} style={{ marginTop: '1.25rem' }}>
         {state.activities.length === 0 ? (
           <EmptyState
-            icon="🤖"
-            title="No agent activity yet"
-            detail="Run the demo to see the full procurement flow from demand aggregation to receipt redemption."
+            title="No activity yet"
+            detail="Run the demo to see demand aggregation through receipt redemption."
           />
         ) : (
           <ActivityTimeline events={[...state.activities].reverse()} />

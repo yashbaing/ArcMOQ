@@ -4,11 +4,11 @@ import { LABELS } from '@arcmoq/shared';
 import { arcTestnet } from '../wagmi';
 
 const NAV = [
-  { to: '/', label: 'Orders', icon: '📋', end: true },
-  { to: '/mandate', label: 'Mandate', icon: '✍️' },
-  { to: '/agent', label: 'Agent', icon: '🤖' },
-  { to: '/settlement', label: 'Settlement', icon: '💱' },
-  { to: '/receipts', label: 'Receipts', icon: '🪙' },
+  { to: '/', label: 'Orders', end: true },
+  { to: '/mandate', label: 'Mandate' },
+  { to: '/agent', label: 'Agent' },
+  { to: '/settlement', label: 'Settlement' },
+  { to: '/receipts', label: 'Receipts' },
 ];
 
 export default function Layout() {
@@ -22,22 +22,22 @@ export default function Layout() {
       <header className="topbar">
         <div className="topbar-inner">
           <Link to="/" className="brand">
-            <div className="brand-mark" aria-hidden>🫒</div>
-            <div className="brand-text">
+            <span className="brand-mark">ArcMOQ</span>
+            <span className="brand-tagline">Small buyers. Real inventory. One autonomous global order.</span>
+            <span className="brand-text" aria-hidden>
               <strong>ArcMOQ</strong>
-              <small>Small buyers. Real inventory. One autonomous global order.</small>
-            </div>
+              <small>Small buyers. Real inventory.</small>
+            </span>
           </Link>
 
           <nav className="nav" aria-label="Main">
-            {NAV.map(({ to, label, icon, end }) => (
+            {NAV.map(({ to, label, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
                 className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
               >
-                <span aria-hidden>{icon}</span>
                 {label}
               </NavLink>
             ))}
@@ -47,7 +47,7 @@ export default function Layout() {
             {isConnected ? (
               <>
                 <span className={`chain-pill ${chainId === arcTestnet.id ? 'ok' : 'warn'}`}>
-                  {chainId === arcTestnet.id ? '● Arc Testnet' : `Chain ${chainId}`}
+                  {chainId === arcTestnet.id ? 'Arc Testnet' : `Chain ${chainId}`}
                 </span>
                 <span className="wallet-addr">{address?.slice(0, 6)}…{address?.slice(-4)}</span>
                 <button className="btn-ghost" onClick={() => disconnect()}>Disconnect</button>
@@ -60,9 +60,9 @@ export default function Layout() {
           </div>
         </div>
 
-        <div className="labels-bar">
+        <div className="labels-bar" aria-label="Demo labels">
           {Object.values(LABELS).map((l) => (
-            <span key={l} className="badge badge-sim">{l}</span>
+            <span key={l} className="badge">{l}</span>
           ))}
         </div>
       </header>
@@ -72,7 +72,7 @@ export default function Layout() {
       </main>
 
       <footer className="app-footer">
-        ArcMOQ · UAE SME group purchasing · Arc Testnet settlement · ERC-1155 warehouse receipts
+        ArcMOQ — UAE SME group purchasing on Arc Testnet
       </footer>
     </div>
   );

@@ -37,13 +37,13 @@ export default function MandatePage() {
   return (
     <div>
       <PageHeader
-        title="Create Buying Mandate"
-        subtitle="Authorize the AI procurement agent to execute within your AED budget and policy limits."
-        badge={<Badge variant="sim">AED Collection: Simulated PSP</Badge>}
+        title="Create buying mandate"
+        subtitle="Authorize the procurement agent to execute within your AED budget and policy limits."
+        badge={<Badge variant="sim">AED collection: simulated PSP</Badge>}
       />
 
       <div className="grid-2">
-        <SectionCard title="Mandate Details" subtitle="Set your purchasing limits — you only see AED, never blockchain assets">
+        <SectionCard title="Mandate details" subtitle="You authorize in AED — USDC pooling happens on Arc">
           <form className="mandate-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Product</label>
@@ -83,31 +83,31 @@ export default function MandatePage() {
             <Toggle checked={autoExec} onChange={setAutoExec} label="Allow autonomous execution within limits" />
             <div className="action-bar" style={{ marginTop: '0.5rem' }}>
               <button type="button" className="btn-secondary" onClick={handleEstimate}>Estimate AED cost</button>
-              <button type="submit" className="btn-primary">Submit Mandate</button>
+              <button type="submit" className="btn-primary">Submit mandate</button>
             </div>
             {submitted && (
-              <div className="alert alert-success" style={{ marginTop: '1rem' }}>✓ Mandate submitted to group order.</div>
+              <div className="alert alert-success" style={{ marginTop: '1rem' }}>Mandate submitted to the group order.</div>
             )}
           </form>
         </SectionCard>
 
         <div>
-          <SectionCard title="AED Pricing Preview" subtitle="What you see vs what happens on Arc">
+          <SectionCard title="AED pricing preview" subtitle="What buyers see in the interface">
             {estimate ? (
               <div className="pricing-preview">
-                <StatCard label="Estimated cost" value={`AED ${estimate.estimatedCostAED.toLocaleString()}`} accent="blue" />
+                <StatCard label="Estimated cost" value={`AED ${estimate.estimatedCostAED.toLocaleString()}`} />
                 <StatCard label="Unit price" value={`AED ${estimate.unitPriceAED.toFixed(2)}`} />
                 <StatCard label="Max authorized" value={`AED ${budget.toLocaleString()}`} />
                 {released !== null && (
                   <div className="pricing-preview__highlight">
-                    <div className="stat-label">Released to you</div>
+                    <div className="stat-label">Released if unused</div>
                     <div className="stat-value">AED {released.toLocaleString()}</div>
                   </div>
                 )}
               </div>
             ) : (
-              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                Click <strong>Estimate AED cost</strong> to preview pricing. USDC pooling on Arc happens behind the scenes.
+              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.65 }}>
+                Estimate cost to preview AED pricing. Stablecoin settlement runs behind the scenes on Arc Testnet.
               </p>
             )}
           </SectionCard>
@@ -118,7 +118,7 @@ export default function MandatePage() {
               <div className="kv-list__row"><span>Estimated cost</span><span>AED 14,120</span></div>
               <div className="kv-list__row"><span>Maximum authorized</span><span>AED 16,000</span></div>
               <div className="kv-list__row"><span>Final cost</span><span><strong>AED 13,970</strong></span></div>
-              <div className="kv-list__row"><span>Released</span><span style={{ color: 'var(--success)' }}>AED 2,030</span></div>
+              <div className="kv-list__row"><span>Released</span><span style={{ color: 'var(--ok)' }}>AED 2,030</span></div>
             </div>
           </SectionCard>
 

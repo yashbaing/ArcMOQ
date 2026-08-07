@@ -31,18 +31,15 @@ export function StatCard({
   label,
   value,
   unit,
-  accent,
-  icon,
 }: {
   label: string;
   value: string | number;
   unit?: string;
-  accent?: 'gold' | 'green' | 'blue';
+  accent?: string;
   icon?: string;
 }) {
   return (
-    <div className={`stat-card stat-card--${accent || 'default'}`}>
-      {icon && <span className="stat-card__icon" aria-hidden>{icon}</span>}
+    <div className="stat-card">
       <div className="stat-label">{label}</div>
       <div className="stat-value">
         {value}
@@ -97,7 +94,9 @@ export function MoqBar({ demand, originalMoq, negotiatedMoq }: { demand: number;
         )}
       </div>
       {negotiated && (
-        <p className="moq-bar__note">Agent renegotiated MOQ to <strong>{negotiatedMoq}</strong> tins</p>
+        <p className="moq-bar__note">
+          Agent renegotiated MOQ to <strong>{negotiatedMoq}</strong> tins
+        </p>
       )}
     </div>
   );
@@ -112,10 +111,9 @@ export function LoadingState({ label = 'Loading…' }: { label?: string }) {
   );
 }
 
-export function EmptyState({ icon, title, detail, action }: { icon?: string; title: string; detail?: string; action?: ReactNode }) {
+export function EmptyState({ title, detail, action }: { icon?: string; title: string; detail?: string; action?: ReactNode }) {
   return (
     <div className="empty-state">
-      {icon && <div className="empty-state__icon">{icon}</div>}
       <h3>{title}</h3>
       {detail && <p>{detail}</p>}
       {action}
@@ -123,7 +121,19 @@ export function EmptyState({ icon, title, detail, action }: { icon?: string; tit
   );
 }
 
-export function SectionCard({ title, subtitle, children, className = '', style }: { title: string; subtitle?: string; children: ReactNode; className?: string; style?: CSSProperties }) {
+export function SectionCard({
+  title,
+  subtitle,
+  children,
+  className = '',
+  style,
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+}) {
   return (
     <section className={`section-card ${className}`} style={style}>
       <div className="section-card__head">
@@ -164,26 +174,16 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
   );
 }
 
-const EVENT_ICONS: Record<string, string> = {
-  demand_aggregated: '📊',
-  supplier_compared: '🔍',
-  negotiation_started: '🤝',
-  counteroffer_submitted: '📝',
-  supplier_accepted: '✅',
-  policy_check: '🛡️',
-  fx_quote: '💱',
-  settlement_executed: '⚡',
-  shipment_verified: '📦',
-  receipt_minted: '🪙',
-  redemption: '🏪',
-};
-
-export function ActivityTimeline({ events }: { events: Array<{ id: string; type: string; title: string; detail: string; timestamp: string }> }) {
+export function ActivityTimeline({
+  events,
+}: {
+  events: Array<{ id: string; type: string; title: string; detail: string; timestamp: string }>;
+}) {
   return (
     <div className="activity-timeline">
       {events.map((event) => (
         <article key={event.id} className={`activity-timeline__item activity-timeline__item--${event.type}`}>
-          <div className="activity-timeline__icon">{EVENT_ICONS[event.type] || '•'}</div>
+          <div className="activity-timeline__icon" aria-hidden />
           <div className="activity-timeline__content">
             <div className="activity-timeline__meta">
               <strong>{event.title}</strong>

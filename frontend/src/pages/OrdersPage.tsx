@@ -16,12 +16,12 @@ export default function OrdersPage() {
   return (
     <div>
       <PageHeader
-        title="Active Group Orders"
+        title="Active group orders"
         subtitle="UAE SMEs combine demand to reach supplier MOQs and unlock wholesale pricing on Arc."
         actions={
           <div className="action-bar">
             <button className="btn-demo" onClick={() => runDemo.mutate()} disabled={runDemo.isPending}>
-              {runDemo.isPending ? 'Running demo…' : '▶ Run Full Demo'}
+              {runDemo.isPending ? 'Running…' : 'Run full demo'}
             </button>
             <button className="btn-ghost" onClick={() => stepMutations.reset.mutate()}>Reset</button>
           </div>
@@ -31,7 +31,7 @@ export default function OrdersPage() {
       <div className="hero-card">
         <div className="hero-card__top">
           <div className="hero-card__product">
-            <Badge variant="live">Live Group Order</Badge>
+            <Badge variant="live">Live order</Badge>
             <h2>{order.productName}</h2>
             <div className="hero-card__meta">
               <span>{order.origin}</span>
@@ -44,10 +44,10 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <div className="grid-3" style={{ marginTop: '1.35rem' }}>
-          <StatCard label="Current demand" value={order.currentDemand} unit="tins" accent="green" icon="📦" />
-          <StatCard label="Supplier MOQ" value={order.supplierMoq} unit="tins" accent="blue" icon="🏭" />
-          <StatCard label="UAE businesses" value={order.buyerCount} accent="gold" icon="🏢" />
+        <div className="hero-metrics">
+          <StatCard label="Current demand" value={order.currentDemand} unit="tins" />
+          <StatCard label="Supplier MOQ" value={order.supplierMoq} unit="tins" />
+          <StatCard label="UAE businesses" value={order.buyerCount} />
         </div>
 
         <MoqBar
@@ -58,8 +58,7 @@ export default function OrdersPage() {
 
         {!moqMet && gap > 0 && (
           <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
-            <span>⚠️</span>
-            <span>{gap} more tins needed for original MOQ of 1,000. The AI agent can negotiate this down.</span>
+            {gap} more tins needed for the original MOQ of 1,000. The procurement agent can negotiate this down.
           </div>
         )}
 
@@ -67,8 +66,8 @@ export default function OrdersPage() {
           <div className="moq-banner">
             <div className="moq-banner__icon">✓</div>
             <div>
-              <strong>MOQ Renegotiated</strong>
-              <p>Agent secured 860 tins @ €38.10 with immediate EURC settlement and monthly recurring intent.</p>
+              <strong>MOQ renegotiated</strong>
+              <p>Agent secured 860 tins at €38.10 with immediate EURC settlement and monthly recurring intent.</p>
             </div>
           </div>
         )}
@@ -76,13 +75,13 @@ export default function OrdersPage() {
         <ProgressRail steps={STEPS} current={state.demoStep} />
       </div>
 
-      <SectionCard title="Buyer Mandates" subtitle={`${state.mandates.length} UAE businesses in this group order`}>
+      <SectionCard title="Buyer mandates" subtitle={`${state.mandates.length} UAE businesses in this group order`}>
         <table>
           <thead>
             <tr>
               <th>Business</th>
               <th>Quantity</th>
-              <th>Max Budget</th>
+              <th>Max budget</th>
               <th>Deadline</th>
               <th>Auto-exec</th>
             </tr>
