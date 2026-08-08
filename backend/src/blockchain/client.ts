@@ -1,161 +1,104 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  type Address,
-  type Hash,
-  type PublicClient,
-  type WalletClient,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { arcTestnet } from "../config/chain.js";
-import { getDeployment } from "../config/deployments.js";
-import { groupOrderAbi, warehouseReceiptAbi, stableFxAdapterAbi } from "./abis.js";
+import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, type Address } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { getDeployments, ARC_RPC } from '../config/chain';
+import GroupOrderAbi from './abis/GroupOrder.json';
+import WarehouseReceiptAbi from './abis/WarehouseReceipt.json';
+import StableFXAdapterAbi from './abis/StableFXAdapter.json';
+import IERC20Abi from './abis/IERC20.json';
 
-let publicClient: PublicClient | null = null;
-let walletClient: WalletClient | null = null;
+const arcTestnet = {
+  id: 5042002,
+  name: 'Arc Testnet',
+  nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 6 },
+  rpcUrls: { default: { http: [ARC_RPC] } },
+} as const;
 
-function getPublicClient(): PublicClient {
-  if (!publicClient) {
-    publicClient = createPublicClient({
-      chain: arcTestnet,
-      transport: http(arcTestnet.rpcUrls.default.http[0]),
-    });
+export function getClients() {
+  const key = process.env.DEPLOYER_PRIVATE_KEY;
+  if (!key) return null;
+
+  const account = privateKeyToAccount(key as `0x${string}`);
+  const publicClient = createPublicClient({ chain: arcTestnet, transport: http(ARC_RPC) });
+  const walletClient = createWalletClient({ account, chain: arcTestnet, transport: http(ARC_RPC) });
+  return { publicClient, walletClient, account };
+}
+
+export async function setupDemoOnChain(): Promise<Record<string, string | string[]>> {
+  const clients = getClients();
+  const deployments = getDeployments();
+  if (!clients || deployments.contracts.GroupOrder === '0x0000000000000000000000000000000000000000') {
+    return { status: 'skipped', reason: 'Contracts not deployed or no private key' };
   }
-  return publicClient;
-}
 
-function getWalletClient(): WalletClient {
-  if (!walletClient) {
-    const key = process.env.DEPLOYER_PRIVATE_KEY;
-    if (!key) throw new Error("DEPLOYER_PRIVATE_KEY not set");
-    const account = privateKeyToAccount(key as `0x${string}`);
-    walletClient = createWalletClient({
-      account,
-      chain: arcTestnet,
-      transport: http(arcTestnet.rpcUrls.default.http[0]),
+  const { walletClient, publicClient, account } = clients;
+  const groupOrder = deployments.contracts.GroupOrder as Address;
+  const receipt = deployments.contracts.WarehouseReceipt as Address;
+  const usdc = deployments.contracts.USDC as Address;
+
+  const supplier = '0x000000000000000000000000000000000000dEaD' as Address;
+  const buyers = [
+    '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+    '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+  ] as Address[];
+
+  const hashes: string[] = [];
+
+  const whitelistTx = await walletClient.writeContract({
+    address: groupOrder,
+    abi: GroupOrderAbi,
+    functionName: 'setSupplierWhitelist',
+    args: [supplier, true],
+  });
+  await publicClient.waitForTransactionReceipt({ hash: whitelistTx });
+  hashes.push(whitelistTx);
+
+  for (const buyer of buyers) {
+    const kybOrderTx = await walletClient.writeContract({
+      address: groupOrder,
+      abi: GroupOrderAbi,
+      functionName: 'setKybApproved',
+      args: [buyer, true],
     });
+    await publicClient.waitForTransactionReceipt({ hash: kybOrderTx });
+    hashes.push(kybOrderTx);
+
+    const kybReceiptTx = await walletClient.writeContract({
+      address: receipt,
+      abi: WarehouseReceiptAbi,
+      functionName: 'setKybApproved',
+      args: [buyer, true],
+    });
+    await publicClient.waitForTransactionReceipt({ hash: kybReceiptTx });
+    hashes.push(kybReceiptTx);
   }
-  return walletClient;
-}
 
-export async function getChainId(): Promise<number> {
-  return getPublicClient().getChainId();
-}
-
-export async function getBlockNumber(): Promise<bigint> {
-  return getPublicClient().getBlockNumber();
-}
-
-export async function whitelistBuyer(buyer: Address): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "whitelistBuyer",
-    args: [buyer],
+  const orderTx = await walletClient.writeContract({
+    address: groupOrder,
+    abi: GroupOrderAbi,
+    functionName: 'createOrder',
+    args: ['Extra Virgin Olive Oil', 'Jaen, Spain', '5-liter tins', 860n],
   });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
+  await publicClient.waitForTransactionReceipt({ hash: orderTx });
+  hashes.push(orderTx);
+
+  return { status: 'ok', hashes };
 }
 
-export async function setBuyerKyb(buyer: Address, kybHash: `0x${string}`): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "setBuyerKyb",
-    args: [buyer, kybHash],
-  });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
-}
+export async function getOnChainBalances(address: Address) {
+  const clients = getClients();
+  const deployments = getDeployments();
+  if (!clients) return null;
 
-export async function createGroupOrderOnChain(params: {
-  commodity: string;
-  quantity: bigint;
-  unitPrice: bigint;
-  deadline: bigint;
-  minParticipants: bigint;
-  maxParticipants: bigint;
-}): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "createOrder",
-    args: [
-      params.commodity,
-      params.quantity,
-      params.unitPrice,
-      params.deadline,
-      params.minParticipants,
-      params.maxParticipants,
-    ],
+  const balance = await clients.publicClient.getBalance({ address });
+  const usdc = await clients.publicClient.readContract({
+    address: deployments.contracts.USDC as Address,
+    abi: IERC20Abi,
+    functionName: 'balanceOf',
+    args: [address],
   });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
-}
 
-export async function joinGroupOrderOnChain(orderId: bigint, amount: bigint): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "joinOrder",
-    args: [orderId, amount],
-  });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
-}
-
-export async function issueReceiptOnChain(
-  orderId: bigint,
-  holder: Address,
-  commodity: string,
-  quantity: bigint,
-  warehouse: string
-): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("WarehouseReceipt").address,
-    abi: warehouseReceiptAbi,
-    functionName: "issueReceipt",
-    args: [orderId, holder, commodity, quantity, warehouse],
-  });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
-}
-
-export async function convertStableOnChain(
-  fromToken: Address,
-  toToken: Address,
-  amount: bigint
-): Promise<Hash> {
-  const client = getWalletClient();
-  const hash = await client.writeContract({
-    address: getDeployment("StableFXAdapter").address,
-    abi: stableFxAdapterAbi,
-    functionName: "convert",
-    args: [fromToken, toToken, amount],
-  });
-  await getPublicClient().waitForTransactionReceipt({ hash });
-  return hash;
-}
-
-export async function readOrderCount(): Promise<bigint> {
-  return getPublicClient().readContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "orderCount",
-  });
-}
-
-export async function readOrder(orderId: bigint) {
-  return getPublicClient().readContract({
-    address: getDeployment("GroupOrder").address,
-    abi: groupOrderAbi,
-    functionName: "getOrder",
-    args: [orderId],
-  });
+  return {
+    native: formatUnits(balance, 6),
+    usdc: formatUnits(usdc as bigint, 6),
+  };
 }
