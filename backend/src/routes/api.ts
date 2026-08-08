@@ -1,97 +1,147 @@
-import { Router } from "express";
-import { getArcTestnetStatus, initializeArcTestnetDemo } from "../blockchain/service.js";
-import { getGroupOrders, getGroupOrderById } from "../services/groupOrders.js";
-import { getReceipts, getReceiptById } from "../services/receipts.js";
-import { getFxRates, convertCurrency } from "../services/fx.js";
-import { runAgentDemo } from "../agent/orchestrator.js";
+import { Router } from 'express';
+import {
+  aggregateDemand,
+  acceptSupplierOffer,
+  compareSuppliers,
+  executeSettlement,
+  getFxQuote,
+  getState,
+  mintReceipts,
+  negotiateWithSupplier,
+  redeemReceipt,
+  resetState,
+  runPolicyChecks,
+  verifyShipment,
+  addMandate,
+  estimateMandateAED,
+} from '../agent/orchestrator';
+import { BuyerMandateInput } from '@arcmoq/shared';
+import { getDeployments, EXPLORER_URL } from '../config/chain';
+import { getArcTestnetStatus, initializeArcTestnetDemo } from '../blockchain/service';
 
 const router = Router();
 
-router.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+router.get('/state', (_req, res) => {
+  res.json({ ...getState(), deployments: getDeployments(), explorerUrl: EXPLORER_URL });
 });
 
-router.get("/chain/status", async (_req, res) => {
-  try {
-    const status = await getArcTestnetStatus();
-    res.json(status);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
+router.post('/reset', (_req, res) => {
+  resetState();
+  res.json(getState());
+});
+
+router.get('/orders', (_req, res) => {
+  const state = getState();
+  res.json({ orders: [state.groupOrder] });
+});
+
+router.get('/mandates', (_req, res) => {
+  res.json(getState().mandates);
+});
+
+router.post('/mandates', (req, res) => {
+  const body = req.body as BuyerMandateInput;
+  const mandate = addMandate(body);
+  res.json(mandate);
+});
+
+router.post('/mandates/estimate', (req, res) => {
+  const { quantity, unitPriceEUR } = req.body;
+  res.json(estimateMandateAED(Number(quantity), unitPriceEUR ? Number(unitPriceEUR) : undefined));
+});
+
+router.get('/suppliers', (_req, res) => {
+  res.json(getState().suppliers);
+});
+
+router.get('/activities', (_req, res) => {
+  res.json(getState().activities);
+});
+
+router.post('/agent/aggregate', (_req, res) => {
+  res.json(aggregateDemand());
+});
+
+router.post('/agent/compare', (_req, res) => {
+  res.json(compareSuppliers());
+});
+
+router.post('/agent/negotiate', (req, res) => {
+  const supplierId = req.body.supplierId || 'oliva-sur';
+  res.json(negotiateWithSupplier(supplierId));
+});
+
+router.post('/agent/accept', (_req, res) => {
+  res.json(acceptSupplierOffer());
+});
+
+router.post('/agent/policy-check', (_req, res) => {
+  res.json(runPolicyChecks());
+});
+
+router.get('/agent/fx-quote', (_req, res) => {
+  res.json(getFxQuote());
+});
+
+router.post('/agent/settle', (req, res) => {
+  const { txHash } = req.body;
+  res.json(executeSettlement(txHash));
+});
+
+router.post('/agent/verify-shipment', (_req, res) => {
+  verifyShipment();
+  res.json({ verified: true, batchId: 'EVOO-ES-UAE-001' });
+});
+
+router.post('/agent/mint-receipts', (_req, res) => {
+  mintReceipts();
+  res.json({ minted: true });
+});
+
+router.post('/agent/redeem', (req, res) => {
+  const { buyerName, quantity, txHash } = req.body;
+  redeemReceipt(buyerName, Number(quantity), txHash);
+  res.json({ success: true });
+});
+
+router.post('/agent/run-demo', async (_req, res) => {
+  resetState();
+  aggregateDemand();
+  compareSuppliers();
+  negotiateWithSupplier('oliva-sur');
+  acceptSupplierOffer();
+  runPolicyChecks();
+  getFxQuote();
+  executeSettlement();
+  verifyShipment();
+  mintReceipts();
+  redeemReceipt('Restaurant A — Al Barsha', 100);
+
+  let onChain: Record<string, string | string[]> | null = null;
+  if (process.env.ARC_ONCHAIN_DEMO === 'true') {
+    try {
+      onChain = await initializeArcTestnetDemo();
+    } catch {
+      onChain = { status: 'error' };
+    }
   }
+
+  res.json({ ...getState(), deployments: getDeployments(), explorerUrl: EXPLORER_URL, onChain });
 });
 
-router.post("/chain/setup", async (_req, res) => {
-  try {
-    const result = await initializeArcTestnetDemo();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
+router.get('/deployments', (_req, res) => {
+  res.json(getDeployments());
 });
 
-router.get("/group-orders", async (_req, res) => {
-  try {
-    const orders = await getGroupOrders();
-    res.json(orders);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
+router.get('/chain/status', async (_req, res) => {
+  res.json(await getArcTestnetStatus());
 });
 
-router.get("/group-orders/:id", async (req, res) => {
+router.post('/chain/setup', async (_req, res) => {
   try {
-    const order = await getGroupOrderById(req.params.id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
-    res.json(order);
+    res.json(await initializeArcTestnetDemo());
   } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-router.get("/receipts", async (_req, res) => {
-  try {
-    const receipts = await getReceipts();
-    res.json(receipts);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-router.get("/receipts/:id", async (req, res) => {
-  try {
-    const receipt = await getReceiptById(req.params.id);
-    if (!receipt) return res.status(404).json({ error: "Receipt not found" });
-    res.json(receipt);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-router.get("/fx/rates", async (_req, res) => {
-  try {
-    const rates = await getFxRates();
-    res.json(rates);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-router.post("/fx/convert", async (req, res) => {
-  try {
-    const { from, to, amount } = req.body;
-    const result = await convertCurrency(from, to, amount);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
-  }
-});
-
-router.post("/agent/demo", async (_req, res) => {
-  try {
-    const result = await runAgentDemo();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: String(err) });
+    res.status(500).json({ error: err instanceof Error ? err.message : 'On-chain setup failed' });
   }
 });
 
