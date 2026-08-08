@@ -6,7 +6,7 @@ import { LABELS } from '@arcmoq/shared';
 export function createApp() {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({ origin: true }));
   app.use(express.json());
 
   app.get('/health', (_req, res) => {
@@ -14,6 +14,7 @@ export function createApp() {
   });
 
   app.use('/api', apiRouter);
+  app.use(apiRouter);
 
   return app;
 }

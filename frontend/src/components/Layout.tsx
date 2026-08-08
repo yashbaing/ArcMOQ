@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { useAccount, useConnect, useDisconnect, useChainId } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
 import { LABELS } from '@arcmoq/shared';
 import { arcTestnet } from '../wagmi';
 
@@ -13,9 +13,21 @@ const NAV = [
 
 export default function Layout() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connect, connectors, isPending, error: connectError } = useConnect();
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+
+  const injectedConnector = connectors.find((c) => c.type === 'injected') ?? connectors[0];
+  const onArc = chainId === arcTestnet.id;
+
+  const handleConnect = () => {
+    if (!injectedConnector) {
+      window.alert('No wallet detected. Install MetaMask or open this app in a Web3 browser.');
+      return;
+    }
+    connect({ connector: injectedConnector, chainId: arcTestnet.id });
+  };
 
   return (
     <div className="app-shell">
@@ -46,19 +58,36 @@ export default function Layout() {
           <div className="wallet">
             {isConnected ? (
               <>
-                <span className={`chain-pill ${chainId === arcTestnet.id ? 'ok' : 'warn'}`}>
-                  {chainId === arcTestnet.id ? 'Arc Testnet' : `Chain ${chainId}`}
+                <span className={`chain-pill ${onArc ? 'ok' : 'warn'}`}>
+                  {onArc ? 'Arc Testnet' : `Chain ${chainId}`}
                 </span>
+                {!onArc && (
+                  <button
+                    className="btn-ghost"
+                    disabled={isSwitching}
+                    onClick={() => switchChain({ chainId: arcTestnet.id })}
+                  >
+                    {isSwitching ? 'Switching…' : 'Switch to Arc'}
+                  </button>
+                )}
                 <span className="wallet-addr">{address?.slice(0, 6)}…{address?.slice(-4)}</span>
                 <button className="btn-ghost" onClick={() => disconnect()}>Disconnect</button>
               </>
             ) : (
-              <button className="btn-primary" onClick={() => connect({ connector: connectors[0] })}>
-                Connect Wallet
+              <button className="btn-primary" onClick={handleConnect} disabled={isPending}>
+                {isPending ? 'Connecting…' : 'Connect Wallet'}
               </button>
             )}
           </div>
         </div>
+
+        {connectError && (
+          <div className="labels-bar">
+            <span className="badge" style={{ background: '#fde8e8', color: '#9b1c1c' }}>
+              Wallet: {connectError.message}
+            </span>
+          </div>
+        )}
 
         <div className="labels-bar" aria-label="Demo labels">
           {Object.values(LABELS).map((l) => (

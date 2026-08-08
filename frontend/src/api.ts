@@ -1,6 +1,10 @@
 import { AgentActivityEvent, BuyerMandateInput, GroupOrderView, PolicyCheckResult, ReceiptView, SettlementView, SupplierQuote } from '@arcmoq/shared';
 
-const API = '/api';
+function apiBase(): string {
+  const configured = import.meta.env.VITE_API_URL?.trim();
+  if (configured) return configured.replace(/\/$/, '');
+  return '/api';
+}
 
 export interface AppStateResponse {
   groupOrder: GroupOrderView;
@@ -21,11 +25,14 @@ export interface AppStateResponse {
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || `Request failed (${res.status})`);
+  }
   return res.json();
 }
 
