@@ -3,11 +3,15 @@
   "version": 2,
   "installCommand": "npm install",
   "buildCommand": "npm run vercel-build",
-  "framework": null,
+  "outputDirectory": "public",
   "rewrites": [
-    {
-      "source": "/((?!api/|assets/|.*\\..*).*)",
-      "destination": "/index.html"
+    { "source": "/api/:path*", "destination": "/api" },
+    { "source": "/health", "destination": "/api" },
+    { "source": "/((?!api/|assets/|.*\\..*).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "backend/src/config/**"
     }
-  ]
+  }
 }
