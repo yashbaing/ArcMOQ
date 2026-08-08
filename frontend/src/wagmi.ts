@@ -1,23 +1,31 @@
 import { http, createConfig } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
+import { arcTestnet } from './chain';
 
-export const ARC_CONTRACTS = {
-  USDC: '0x3600000000000000000000000000000000000000' as `0x${string}`,
-  EURC: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a' as `0x${string}`,
-} as const;
+export { arcTestnet, ARC_CONTRACTS } from './chain';
 
-export const arcTestnet = {
-  id: 5042002,
-  name: 'Arc Testnet',
-  nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 6 },
-  rpcUrls: { default: { http: ['https://rpc.testnet.arc.io'] } },
-  blockExplorers: { default: { name: 'ArcScan', url: 'https://testnet.arcscan.app' } },
-  testnet: true,
-} as const;
+const wcProjectId = import.meta.env.VITE_WC_PROJECT_ID?.trim();
 
 export const wagmiConfig = createConfig({
   chains: [arcTestnet],
-  connectors: [injected()],
+  connectors: [
+    injected({ shimDisconnect: true }),
+    ...(wcProjectId
+      ? [
+          walletConnect({
+            projectId: wcProjectId,
+            showQrModal: true,
+            metadata: {
+              name: 'ArcMOQ',
+              description: 'UAE SME group purchasing on Arc Testnet',
+              url: typeof window !== 'undefined' ? window.location.origin : 'https://arcmoq.vercel.app',
+              icons: [],
+            },
+          }),
+        ]
+      : []),
+  ],
+  multiInjectedProviderDiscovery: true,
   transports: {
     [arcTestnet.id]: http('https://rpc.testnet.arc.io'),
   },

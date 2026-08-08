@@ -8,6 +8,7 @@ export function useAppState() {
     queryKey: ['appState'],
     queryFn: api.getState,
     refetchInterval: 5000,
+    retry: 2,
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['appState'] });
@@ -34,5 +35,10 @@ export function useAppState() {
     reset: useMutation({ mutationFn: api.reset, onSuccess: invalidate }),
   };
 
-  return { ...query, runDemo, stepMutations, state: query.data as AppStateResponse | undefined };
+  return {
+    ...query,
+    runDemo,
+    stepMutations,
+    state: query.data as AppStateResponse | undefined,
+  };
 }
