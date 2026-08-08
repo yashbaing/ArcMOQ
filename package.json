@@ -3,12 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "ArcMOQ — UAE SME group purchasing with AI procurement and Arc testnet settlement",
-  "workspaces": [
-    "contracts",
-    "backend",
-    "frontend",
-    "shared"
-  ],
+  "workspaces": ["contracts", "backend", "frontend", "shared"],
   "scripts": {
     "install:all": "npm install",
     "build": "npm run vercel-build",
@@ -19,21 +14,12 @@
     "compile": "npm run compile -w contracts",
     "deploy": "npm run deploy -w contracts",
     "seed": "npm run seed -w backend",
-    "demo": "npm run demo -w backend"
+    "demo": "npm run demo -w backend",
+    "arc:status": "npm run arc:status -w backend",
+    "arc:setup": "npm run arc:setup -w backend",
+    "serve": "npm run vercel-build && npm run serve -w backend"
   },
-  "devDependencies": {
-    "concurrently": "^9.1.2",
-    "vercel": "^41.0.0"
-  },
-  "dependencies": {
-    "@arcmoq/shared": "*",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "uuid": "^11.0.5",
-    "viem": "^2.23.5"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "devDependencies": {"concurrently": "^9.1.2", "vercel": "^41.0.0"},
+  "dependencies": {"@arcmoq/shared": "*", "cors": "^2.8.5", "dotenv": "^16.4.7", "express": "^4.21.2", "uuid": "^11.0.5", "viem": "^2.23.5"},
+  "engines": {"node": ">=18"}
 }
