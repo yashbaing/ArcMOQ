@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppState } from '../hooks/useAppState';
 import { AppStateGate } from '../components/AppStateGate';
 import { PageHeader, StatCard, Badge, ProgressRail, MoqBar, SectionCard } from '../components/ui';
@@ -6,6 +7,25 @@ const STEPS = ['Demand', 'Research', 'Negotiate', 'Policy', 'Settle', 'Verify', 
 
 export default function OrdersPage() {
   const { runDemo, stepMutations } = useAppState();
+  const [demoNotice, setDemoNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleRunDemo = () => {
+    setDemoNotice(null);
+    runDemo.mutate(undefined, {
+      onSuccess: (data) => {
+        setDemoNotice({
+          type: 'success',
+          message: `Demo complete — settlement, verification, minting, and redemption finished (step ${data.demoStep} of ${STEPS.length}).`,
+        });
+      },
+      onError: (err) => {
+        setDemoNotice({
+          type: 'error',
+          message: err instanceof Error ? err.message : 'Demo failed',
+        });
+      },
+    });
+  };
 
   return (
     <AppStateGate label="Loading group orders…">
@@ -22,13 +42,23 @@ export default function OrdersPage() {
               subtitle="UAE SMEs combine demand to reach supplier MOQs and unlock wholesale pricing on Arc."
               actions={
                 <div className="action-bar">
-                  <button className="btn-demo" onClick={() => runDemo.mutate()} disabled={runDemo.isPending}>
+                  <button className="btn-demo" onClick={handleRunDemo} disabled={runDemo.isPending}>
                     {runDemo.isPending ? 'Running…' : 'Run full demo'}
                   </button>
-                  <button className="btn-ghost" onClick={() => stepMutations.reset.mutate()}>Reset</button>
+                  <button className="btn-ghost" onClick={() => { setDemoNotice(null); stepMutations.reset.mutate(); }}>Reset</button>
                 </div>
               }
             />
+            {demoNotice?.type === 'success' && (
+              <div className="alert alert-success" style={{ marginBottom: '1rem' }}>
+                {demoNotice.message}
+              </div>
+            )}
+            {demoNotice?.type === 'error' && (
+              <div className="alert alert-warning" style={{ marginBottom: '1rem' }}>
+                {demoNotice.message}
+              </div>
+            )}
             <div className="hero-card">
               <div className="hero-card__top">
                 <div className="hero-card__product">
